@@ -1,4 +1,5 @@
 const imageUpload = document.getElementById('imageUpload')
+const wait = document.getElementById('wait')
 const video = document.getElementById('video')
 
 Promise.all([
@@ -22,14 +23,20 @@ async function start() {
   const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.6)
   let image
   let canvas
+  wait.style.display = 'none';
+  alert('Можете загружать фото..Нейросеть обучилась');
   imageUpload.addEventListener('change', async () => {
     if (image) image.remove()
     if (canvas) canvas.remove()
     image = await faceapi.bufferToImage(imageUpload.files[0])
+    image.width = 640
+    image.height = 480
     container.append(image)
     canvas = faceapi.createCanvasFromMedia(image)
+    canvas.width = 640
+    canvas.height = 480
     container.append(canvas)
-    const displaySize = { width: image.width, height: image.height }
+    const displaySize = { width: 640, height: 480 }
     faceapi.matchDimensions(canvas, displaySize)
     const detections = await faceapi.detectAllFaces(image).withFaceLandmarks().withFaceDescriptors()
     const resizedDetections = faceapi.resizeResults(detections, displaySize)
@@ -43,12 +50,15 @@ async function start() {
 }
 
 function loadLabeledImages() {
-  const labels = ['Black Widow', 'Captain America', 'Captain Marvel', 'Hawkeye', 'Jim Rhodes', 'Thor', 'Tony Stark', 'Henry Pym']
+  const labels = ['Black Widow',
+    'Captain America', 'Captain Marvel', 'Hawkeye', 'Jim Rhodes', 'Thor',
+    'Tony Stark', 'Ant Man', 'Hulk', 'Wasp', 'Wolverine', 'Doctor Strange']
   return Promise.all(
     labels.map(async label => {
       const descriptions = []
       for (let i = 1; i <= 2; i++) {
-        const img = await faceapi.fetchImage(`https://raw.githubusercontent.com/WebDevSimplified/Face-Recognition-JavaScript/master/labeled_images/${label}/${i}.jpg`)
+        const img = new Image(640, 480)
+        img.src = `/labeled_images/${label}/${i}.jpg`
         const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
         descriptions.push(detections.descriptor)
       }
